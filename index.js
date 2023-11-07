@@ -31,12 +31,23 @@ async function run() {
       res.send(result)
     })
 
+
     app.get('/foods', async (req, res) => {
-      const result = await foodCollections.find().toArray();
+      let queryObject = {}
+      let sortObject = {}
+      const email = req.query.email
+      const sortField = req.query.sortField
+      const sortOrder = req.query.sortOrder
+
+      if(email){
+        queryObject.email = email
+      }
+      if(sortField && sortOrder){
+        sortObject[sortField] = sortObject
+      }
+      const result = await foodCollections.find(queryObject).sort(sortObject).toArray()
       res.send(result)
     })
-
-
 
 
 
