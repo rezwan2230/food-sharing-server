@@ -31,9 +31,10 @@ async function run() {
       res.send(result)
     })
 
-   
-
-
+    app.get('/foods', async (req, res) => {
+      const result = await foodCollections.find().toArray();
+      res.send(result)
+    })
 
 
 
