@@ -39,22 +39,47 @@ async function run() {
       const sortField = req.query.sortField
       const sortOrder = req.query.sortOrder
 
-      if(email){
+      if (email) {
         queryObject.email = email
       }
-      if(sortField && sortOrder){
+      if (sortField && sortOrder) {
         sortObject[sortField] = sortObject
       }
       const result = await foodCollections.find(queryObject).sort(sortObject).toArray()
       res.send(result)
     })
 
-    app.get('/foods/:id', async(req, res)=>{
+    app.get('/foods/:id', async (req, res) => {
       const id = req.params.id
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await foodCollections.findOne(query)
       res.send(result)
     })
+
+    app.put('/updatefoods/:id', async (req, res) => {
+      const id = req.params.id
+      const updatedProduct = req.body
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          foodName: updatedProduct.foodName,
+          foodImg: updatedProduct.foodImg,
+          quantity: updatedProduct.quantity,
+          pickupLocation: updatedProduct.pickupLocation,
+          price: updatedProduct.price,
+          discount: updatedProduct.discount,
+          resturantName: updatedProduct.resturantName,
+          expiredate: updatedProduct.expiredate,
+          additionalNotes: updatedProduct.additionalNotes,
+          status: updatedProduct.status,
+        },
+      };
+      const result = await foodCollections.updateOne(filter, updateDoc, options);
+      res.send(result)
+    })
+
+   
 
 
 
