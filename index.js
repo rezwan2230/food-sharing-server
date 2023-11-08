@@ -24,10 +24,22 @@ async function run() {
     await client.connect();
 
     const foodCollections = client.db("foodShare").collection("foods");
+    const requestedfoodCollections = client.db("foodShare").collection("requestedfoods");
 
     app.post('/foods', async (req, res) => {
       const food = req.body
       const result = await foodCollections.insertOne(food);
+      res.send(result)
+    })
+
+    app.post('/requestedfood', async (req, res) => {
+      const food = req.body
+      const result = await requestedfoodCollections.insertOne(food);
+      res.send(result)
+    })
+
+    app.get('/requestedfood', async (req, res) => {
+      const result = await requestedfoodCollections.find().toArray();
       res.send(result)
     })
 
@@ -79,7 +91,12 @@ async function run() {
       res.send(result)
     })
 
-   
+    app.delete('/foods/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await foodCollections.deleteOne(query)
+      res.send(result)
+    })
 
 
 
