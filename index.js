@@ -1,12 +1,22 @@
 const express = require('express')
 var cors = require('cors')
+var jwt = require('jsonwebtoken');
+var cookieParser = require('cookie-parser')
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000
 
-app.use(cors())
+app.use(cors({
+  origin: [
+    'http://localhost:5173'
+    // 'https://cars-doctor-c58eb.web.app',
+    // 'https://cars-doctor-c58eb.firebaseapp.com'
+  ],
+  credentials: true
+}));
 app.use(express.json())
+app.use(cookieParser())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.nvdjbig.mongodb.net/?retryWrites=true&w=majority`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -18,10 +28,47 @@ const client = new MongoClient(uri, {
   }
 });
 
+
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token
+  if (!token) {
+    return res.status(401).send({ message: 'unauthorized access' })
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SCERET, (err, decoded)=>{
+    if(err){
+      return res.status(401).send({ message: 'unauthorized access' })
+    }
+    req.user = decoded
+    next()
+  } )
+}
+
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    app.post('/jwt', async (req, res) => {
+      const loggedUser = req.body
+      console.log("User for token : ", loggedUser);
+      const token = jwt.sign(loggedUser, process.env.ACCESS_TOKEN_SCERET, { expiresIn: '1h' });
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none"
+        })
+        .send({ success: true })
+    })
+
+    app.post('/logout', async (req, res) => {
+      const user = req.body
+      console.log("logging out : ", user);
+      res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+    })
+
+
 
     const foodCollections = client.db("foodShare").collection("foods");
     const requestedfoodCollections = client.db("foodShare").collection("requestedfoods");
