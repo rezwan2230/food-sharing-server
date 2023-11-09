@@ -31,23 +31,31 @@ async function run() {
       res.send(result)
     })
 
-
     app.get('/foods', async (req, res) => {
       let queryObject = {}
       let sortObject = {}
       const email = req.query.email
+      const foodname = req.query.foodName
+      const limit = parseInt(req.query.limit)
       const sortField = req.query.sortField
-      const sortOrder = req.query.sortOrder
-
+      const sortOrder = parseInt(req.query.sortOrder)
+    
       if (email) {
-        queryObject.email = email
+        queryObject.email = email;
       }
-      if (sortField && sortOrder) {
-        sortObject[sortField] = sortObject
+
+      if (foodname) {
+        queryObject.foodName = foodname;
       }
-      const result = await foodCollections.find(queryObject).sort(sortObject).toArray()
-      res.send(result)
-    })
+    
+      if (sortField === 'quantity' || sortField === 'expiredate') {
+        sortObject[sortField] = sortOrder;
+      }
+    
+      const result = await foodCollections.find(queryObject).limit(limit).sort(sortObject).toArray();
+      res.send(result);
+    });
+
 
     app.get('/foods/:id', async (req, res) => {
       const id = req.params.id
@@ -55,6 +63,7 @@ async function run() {
       const result = await foodCollections.findOne(query)
       res.send(result)
     })
+
 
     app.post('/foods', async (req, res) => {
       const food = req.body
